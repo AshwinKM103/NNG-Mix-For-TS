@@ -301,10 +301,10 @@ class DataGenerator():
         else:
             raise NotImplementedError
 
-        print(f'current noise type: {noise_type}')
+        print(f'current noise type: {noise_type}') # Check if it keeps changing per dataset
 
         # show the statistic
-        self.utils.data_description(X=X, y=y)
+        self.utils.data_description(X=X, y=y) # Is it neccesary or being used?
 
         # spliting the current data to the training set and testing set
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=self.test_size, shuffle=True, stratify=y)

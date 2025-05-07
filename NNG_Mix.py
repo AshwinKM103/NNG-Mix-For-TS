@@ -108,9 +108,20 @@ with open(log_path, "a") as f:
         nu = 0
         for num in num_times:
             data_generator = DataGenerator(dataset=dataset, seed=args.seed)
-            data, scaler = data_generator.generator(la=args.la, at_least_one_labeled=True) 
+            data, scaler = data_generator.generator(la=args.la, at_least_one_labeled=True)
+            
+            X_train = data['X_train']
+            y_train = data['y_train']
+            X_test = data['X_test']
+            y_test = data['y_test']
+            
+            pd.DataFrame(X_train).to_csv("X_train.csv", index=False)
+            pd.DataFrame(y_train).to_csv("y_train.csv", index=False, header=["label"])
+            pd.DataFrame(X_test).to_csv("X_test.csv", index=False)
+            pd.DataFrame(y_test).to_csv("y_test.csv", index=False, header=["label"]) 
 
             anomaly_data = data['X_train'][data['y_train']==1]
+            print("anomaly_data.shape: ", anomaly_data.shape)
             unlabeled_data = data['X_train'][data['y_train']==0]
 
             if args.ratio != 1.0:
