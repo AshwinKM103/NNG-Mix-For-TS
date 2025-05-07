@@ -102,7 +102,7 @@ class DataGenerator():
             '''
         self.utils.set_seed(self.seed)
         
-        X, y = dataset.iloc[:, :-1], dataset.iloc[:, -1]
+        X, y = dataset.iloc[:, :-1], dataset.iloc[:, -1].copy()
         
         if type(la) == float:
             if at_least_one_labeled:
@@ -217,6 +217,7 @@ with open(log_path, 'w') as f:
     f.flush()
 
     for i in unique_building_ids:
+        print(i)
         building_dataset = dataset[dataset['building_id'] == i]
         building_dataset = building_dataset.drop(columns=['building_id', 'timestamp'])
         building_dataset = building_dataset.reset_index(drop=True)
@@ -247,8 +248,6 @@ with open(log_path, 'w') as f:
             
             gen_anomaly_files_n = anomaly_data.shape[0] * num
 
-            print("anomaly_data.shape[0]: ", anomaly_data.shape[0])
-            print("unlabeled_data.shape[0]: ", unlabeled_data.shape[0])
             
             if args.method == 'nng_mix':
                 dim = anomaly_data.shape[1]
@@ -289,11 +288,11 @@ with open(log_path, 'w') as f:
                         query_k = max(query_k, 1)
                         query_k = min(query_k, anomaly_data.shape[0])
 
-                        dis, ind = tree2.query(anomaly_data[index1], k=query_k)
+                        dis, ind = tree2.query(anomaly_data.iloc[index1], k=query_k)
                     
                         ind = ind.reshape(1,-1)
                         if ind.shape[1] > 1:
-                            index2 = np.random.choice(ind[0])[0]
+                            index2 = np.random.choice(ind[0])
                         else:
                             index2 = ind[0]
 
@@ -309,7 +308,10 @@ with open(log_path, 'w') as f:
                         if args.nn_mix_gaussian:
                             gaussian_noise1 = np.random.normal(0,args.nn_mix_gaussian_std,dim)
                             gaussian_noise2 = np.random.normal(0,args.nn_mix_gaussian_std,dim)
-                            anomaly_data_sample = (lam * (gaussian_noise1 + anomaly_data[index1]) + (1 - lam) * (gaussian_noise2 + anomaly_data[index2]))
+                            anomaly_data_sample = (
+                            lam * (gaussian_noise1 + anomaly_data.iloc[index1]) + 
+                            (1 - lam) * (gaussian_noise2 + anomaly_data.iloc[index2])
+                            )
                         else:
                             anomaly_data_sample = (lam * anomaly_data[index2] + (1 - lam) * anomaly_data[index1])
                     
