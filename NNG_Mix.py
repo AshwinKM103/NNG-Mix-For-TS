@@ -263,6 +263,7 @@ with open(log_path, "a") as f:
                             dis, ind = tree.query(anomaly_data[index1], k=anomaly_data.shape[0]*args.adjust_nn_k_n)
                         else:
                             dis, ind = tree.query(anomaly_data[index1], k=args.nn_k)
+                        print(ind.shape)
                         index2 = np.random.choice(ind[0])
 
                         if args.use_uniform:
@@ -288,6 +289,7 @@ with open(log_path, "a") as f:
                         dis, ind = tree2.query(anomaly_data[index1], k=query_k)
                     
                         ind = ind.reshape(1,-1)
+                        print(ind.shape)
                         if ind.shape[1] > 1:
                             index2 = np.random.choice(ind[0])
                         else:

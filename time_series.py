@@ -106,7 +106,8 @@ class DataGenerator():
         
         if type(la) == float:
             if at_least_one_labeled:
-                n_labeled_anomalies = ceil(sum(y) * (1 - self.test_size) * la)
+                # n_labeled_anomalies = ceil(sum(y) * (1 - self.test_size) * la)
+                n_labeled_anomalies = ceil(sum(y) * la)
             else:
                 n_labeled_anomalies = int(sum(y) * (1 - self.test_size) * la)
         elif type(la) == int:
@@ -144,34 +145,34 @@ class DataGenerator():
         # idx_normal = np.where(y_train == 0)[0]
         # idx_anomaly = np.where(y_train == 1)[0]
         
-        idx_normal = np.where(y == 0)[0]
-        idx_anomaly = np.where(y == 1)[0]
+        # idx_normal = np.where(y == 0)[0] 
+        # idx_anomaly = np.where(y == 1)[0]
         
-        if type(la) == float:
-            if at_least_one_labeled:
-                idx_labeled_anomaly = np.random.choice(idx_anomaly, ceil(la * len(idx_anomaly)), replace=False)
-            else:
-                idx_labeled_anomaly = np.random.choice(idx_anomaly, int(la * len(idx_anomaly)), replace=False)
-        elif type(la) == int:
-            if la > len(idx_anomaly):
-                raise AssertionError(f'the number of labeled anomalies are greater than the total anomalies: {len(idx_anomaly)} !')
-            else:
-                idx_labeled_anomaly = np.random.choice(idx_anomaly, la, replace=False)
-        else:
-            raise NotImplementedError
+        # if type(la) == float:
+        #     if at_least_one_labeled:
+        #         idx_labeled_anomaly = np.random.choice(idx_anomaly, ceil(la * len(idx_anomaly)), replace=False)
+        #     else:
+        #         idx_labeled_anomaly = np.random.choice(idx_anomaly, int(la * len(idx_anomaly)), replace=False)
+        # elif type(la) == int:
+        #     if la > len(idx_anomaly):
+        #         raise AssertionError(f'the number of labeled anomalies are greater than the total anomalies: {len(idx_anomaly)} !')
+        #     else:
+        #         idx_labeled_anomaly = np.random.choice(idx_anomaly, la, replace=False)
+        # else:
+        #     raise NotImplementedError
 
-        idx_unlabeled_anomaly = np.setdiff1d(idx_anomaly, idx_labeled_anomaly)
+        # idx_unlabeled_anomaly = np.setdiff1d(idx_anomaly, idx_labeled_anomaly)
         
-        idx_unlabeled = np.append(idx_normal, idx_unlabeled_anomaly)
+        # idx_unlabeled = np.append(idx_normal, idx_unlabeled_anomaly)
 
-        del idx_anomaly, idx_unlabeled_anomaly
+        # del idx_anomaly, idx_unlabeled_anomaly
 
         # the label of unlabeled data is 0, and that of labeled anomalies is 1
         # y_train[idx_unlabeled] = 0
         # y_train[idx_labeled_anomaly] = 1
         
-        y.loc[idx_unlabeled] = 0
-        y.loc[idx_labeled_anomaly] = 1
+        # y.loc[idx_unlabeled] = 0
+        # y.loc[idx_labeled_anomaly] = 1
 
         # return {'X_train':X_train, 'y_train':y_train, 'X_test':X_test, 'y_test':y_test}, scaler
         return X, y
@@ -217,7 +218,6 @@ with open(log_path, 'w') as f:
     f.flush()
 
     for i in unique_building_ids:
-        print(i)
         building_dataset = dataset[dataset['building_id'] == i]
         building_dataset = building_dataset.drop(columns=['building_id', 'timestamp'])
         building_dataset = building_dataset.reset_index(drop=True)
@@ -242,9 +242,9 @@ with open(log_path, 'w') as f:
             unlabeled_data = X[y == 0].copy()
             unlabeled_indices = np.where(y == 0)[0]
             
-            if args.ratio != 1.0:
-                idx_choose_anomaly = np.random.choice(anomaly_data.shape[0], ceil(args.ratio * anomaly_data.shape[0]), replace=False)
-                anomaly_data = anomaly_data[idx_choose_anomaly]
+            # if args.ratio != 1.0:
+            #     idx_choose_anomaly = np.random.choice(anomaly_data.shape[0], ceil(args.ratio * anomaly_data.shape[0]), replace=False)
+            #     anomaly_data = anomaly_data[idx_choose_anomaly]
             
             gen_anomaly_files_n = anomaly_data.shape[0] * num
 
@@ -255,11 +255,11 @@ with open(log_path, 'w') as f:
                 tree = spatial.KDTree(unlabeled_data)
                 added_synthetic_data = set()
                 
-                for i in range(gen_anomaly_files_n):
+                for j in range(gen_anomaly_files_n):
                     if np.random.uniform(0,1) > 0.5:
-                        index1 = np.random.choice(anomaly_data.shape[0], 1)[0]
+                        index1 = np.random.choice(anomaly_data.shape[0], 1)
                         if args.adjust_nn_k:
-                            dis, ind = tree.query(anomaly_data[index1], k=anomaly_data.shape[0]*args.adjust_nn_k_n)
+                            dis, ind = tree.query(anomaly_data.iloc[index1], k=anomaly_data.shape[0]*args.adjust_nn_k_n)
                         else:
                             dis, ind = tree.query(anomaly_data.iloc[index1], k=args.nn_k)
                         index2 = np.random.choice(ind[0])
@@ -280,7 +280,7 @@ with open(log_path, 'w') as f:
                             anomaly_data_sample = (lam * anomaly_data[index1] + (1 - lam) * unlabeled_data[index2])
                     
                     else:
-                        index1 = np.random.choice(anomaly_data.shape[0], 1)[0]
+                        index1 = np.random.choice(anomaly_data.shape[0], 1)
                         if args.adjust_nn_k_anomaly:
                             query_k = int(anomaly_data.shape[0]*args.adjust_nn_k_n_anomaly)
                         else:
@@ -290,11 +290,7 @@ with open(log_path, 'w') as f:
 
                         dis, ind = tree2.query(anomaly_data.iloc[index1], k=query_k)
                     
-                        ind = ind.reshape(1,-1)
-                        if ind.shape[1] > 1:
-                            index2 = np.random.choice(ind[0])
-                        else:
-                            index2 = ind[0]
+                        index2 = np.random.choice(ind[0])
 
                         if ind.shape[1] > 1:
                             while index2 == index1:
@@ -357,14 +353,6 @@ with open(log_path, 'w') as f:
             num_anomaly_list.append(new_anomaly_ratio)
             
             # Write the data out
+        
         f.write("{},{},{},{},{},{}\n".format(i, original_anomaly_ratio, num_anomaly_list[0], num_anomaly_list[1], num_anomaly_list[2], num_anomaly_list[3]))
         f.flush()
-    
-            
-                        
-
-    
-    
-
-
-
