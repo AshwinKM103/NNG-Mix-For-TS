@@ -345,8 +345,11 @@ with open(log_path, 'w') as f:
             
             # results[nu] = result['aucroc']
             # nu = nu + 1
-            
-            X = np.vstack([unlabeled_data, anomaly_data])
+            print(unlabeled_data)
+            # X = np.vstack([unlabeled_data, anomaly_data])
+            X.loc[y==0,'meter_reading']=unlabeled_data.values.reshape(-1)   
+            X.loc[y==1,'meter_reading']=anomaly_data.values.reshape(-1)
+
             
             # Calculate ratio of anomalies in changed dataset
             new_anomaly_ratio = y.sum() / len(y)
